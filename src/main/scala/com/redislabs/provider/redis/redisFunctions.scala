@@ -299,6 +299,17 @@ class RedisContext(@transient val sc: SparkContext) extends Serializable {
     vs.foreachPartition(partition => setList(listName, partition, ttl, redisConfig, readWriteConfig))
   }
 
+
+  def toRedisKVSet(vs: RDD[(String, Set[String])], ttl: Int = 0)
+                 (implicit
+                  redisConfig: RedisConfig = RedisConfig.fromSparkConf(sc.getConf),
+                  readWriteConfig: ReadWriteConfig = ReadWriteConfig.fromSparkConf(sc.getConf)): Unit = {
+
+    vs.foreach(kv => {
+      setSet(kv._1, kv._2.toIterator, ttl, redisConfig, readWriteConfig)
+    })
+  }
+
   /**
     * @param vs       RDD of values
     * @param listName target list's name which hold all the vs
